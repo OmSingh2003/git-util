@@ -1,6 +1,5 @@
 /*
 Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-
 */
 package cmd
 
@@ -10,18 +9,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	mainBranch     string // the main branch of the repository
+	deleteBranches bool   //
+	dryRun         bool
+)
 
-
-// rootCmd represents the base command when called without any subcommands
+// rootCmd represents the base command when called without any subcommands and i will use this
 var rootCmd = &cobra.Command{
 	Use:   "git-util",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "A utility too for commoon git operations",
+	Long: `git-util helps automate and simplify various Git tasks.
+The first feature implemented is cleaning up merged local branches.
+More features might be added later`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -47,5 +47,3 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
-
-
