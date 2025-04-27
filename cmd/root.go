@@ -1,30 +1,50 @@
-/*
-Copyright © 2025 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
+// Variables to hold the flag values
 var (
-	mainBranch     string // the main branch of the repository
-	deleteBranches bool   //
+	mainBranchName string
+	deleteBranches bool
 	dryRun         bool
 )
 
-// rootCmd represents the base command when called without any subcommands and i will use this
+// rootCmd represents the base command when called without any subcommands
+// For now, this will be our main 'git-cleaner' functionality command.
 var rootCmd = &cobra.Command{
+	// Use: is the one-line usage message.
+	// Change this to 'git-util' to reflect our project name.
 	Use:   "git-util",
-	Short: "A utility too for commoon git operations",
+	Short: "A utility tool for common Git operations.",
 	Long: `git-util helps automate and simplify various Git tasks.
 The first feature implemented is cleaning up merged local branches.
-More features might be added later`,
+More features might be added later.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// This is where the main logic for our branch cleaner will go.
+		fmt.Println("Executing Git Branch Cleaner functionality...")
+		fmt.Printf("Flags:\n")
+		fmt.Printf("  --main: %s\n", mainBranchName)
+		fmt.Printf("  --delete: %t\n", deleteBranches)
+		fmt.Printf("  --dry-run: %t\n", dryRun)
+
+		// --- TODO: Implement the core logic here ---
+		// 1. Determine the target main branch (use flag or auto-detect).
+		// 2. Run `git branch --merged <target_main_branch>`.
+		// 3. Parse the output.
+		// 4. Filter the branches (remove main branch, current branch '*').
+		// 5. Perform action: Print list OR (if --delete) print/execute delete commands.
+
+		fmt.Println("\n(Core logic not yet implemented)") // Placeholder message
+
+		return nil // Return nil for success, or an error if something goes wrong
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -37,13 +57,13 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// init() runs before main(). We define our flags here.
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.git-util.yaml)")
+	// rootCmd.Flags() are flags specific to *this* command.
+	// Use rootCmd.PersistentFlags() if you want flags to be available to subcommands too (useful later).
+	rootCmd.Flags().StringVar(&mainBranchName, "main", "", "Specify the main branch (e.g., main, master, develop)")
+	rootCmd.Flags().BoolVar(&deleteBranches, "delete", false, "Actually delete the merged branches")
+	rootCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what branches would be deleted without actually deleting")
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// If you wanted to add subcommands later, you would use rootCmd.AddCommand(newCmd) here.
 }
