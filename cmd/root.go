@@ -65,5 +65,4 @@ func init() {
 	rootCmd.Flags().BoolVar(&deleteBranches, "delete", false, "Actually delete the merged branches")
 	rootCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show what branches would be deleted without actually deleting")
 
-	// If you wanted to add subcommands later, you would use rootCmd.AddCommand(newCmd) here.
 }
