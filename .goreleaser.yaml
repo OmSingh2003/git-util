@@ -79,7 +79,7 @@ brews:
     repository:
       owner: OmSingh2003
       name: homebrew-git-util
-      # token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
