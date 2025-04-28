@@ -38,8 +38,7 @@ builds:
 
 # Archive configuration (creates .tar.gz and potentially .zip files)
 archives:
-  - # Unique ID for the archive config
-    id: default
+  - # id: default # <-- Removed this line
     # Name template for the archive files
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     # Use the 'formats' list instead of 'format'
@@ -49,7 +48,8 @@ archives:
     # Add README and LICENSE files to the archive
     files:
       - README.md
-      - LICENSE # Make sure you have this file
+      - LICENSE
+# Make sure you have this file
 
 # Generate checksums for archives
 checksum:
