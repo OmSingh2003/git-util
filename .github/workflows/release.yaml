@@ -38,7 +38,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5 # Use the official GoReleaser action
         with:
           # Specify the GoReleaser version to use
-          version: v2.0.1 # <-- Make sure this line is uncommented
+          version: v2.0.1 # Use a specific v2 version
           # Arguments to pass to GoReleaser
           args: release --clean
         env:
@@ -48,14 +48,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
           # === IMPORTANT for Homebrew Tap ===
-          # If your Homebrew tap repository (homebrew-git-util) is separate and public,
-          # the default GITHUB_TOKEN *might* not have permission to push to it.
-          # The recommended way is to:
-          # 1. Create a *new* Personal Access Token (Classic) with only 'public_repo' scope.
-          # 2. Add this token as a Secret in your git-util repository settings
-          #    (Settings -> Secrets and variables -> Actions -> New repository secret). Name it e.g., HOMEBREW_TAP_TOKEN.
-          # 3. Uncomment the line below in this workflow file.
-          # 4. Add/Uncomment the 'token' line in the 'brews.repository' section of your .goreleaser.yaml:
-          #    token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}" # Matches env var below
-          #
-          # HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          # Pass the dedicated Homebrew tap token (stored as a secret) as an environment variable.
+          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }} # <-- Ensure this line is UNCOMMENTED
