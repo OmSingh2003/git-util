@@ -1,4 +1,4 @@
-# .goreleaser.yaml (With ldflags for version injection)
+# .goreleaser.yaml (Reverting to 'format' for debugging)
 
 # Version of the GoReleaser configuration syntax
 version: 2
@@ -20,36 +20,27 @@ builds:
     goarch:
       - amd64 # Intel/AMD 64-bit
       # - arm64 # Apple Silicon / ARM 64-bit
-    # Environment variables for the build (optional)
-    # env:
-    #   - CGO_ENABLED=0 # Disable CGO for static binaries (usually good for CLIs)
-    # --- Add ldflags for version injection ---
+    # ldflags can inject version information at build time
     ldflags:
       # -s -w strips debug information, making the binary smaller
       - -s -w
       # Inject values into variables in the 'cmd' package
-      # Use your actual module path here!
       - -X github.com/OmSingh2003/git-util/cmd.version={{.Version}}
-      - -X github.com/OmSingh2003/git-util/cmd.commit={{.Commit}} # Full commit hash
-      # Or use short commit: -X github.com/OmSingh2003/git-util/cmd.commit={{.ShortCommit}}
-      - -X github.com/OmSingh2003/git-util/cmd.date={{.Date}} # Build date
-    # --- End ldflags section ---
+      - -X github.com/OmSingh2003/git-util/cmd.commit={{.Commit}}
+      - -X github.com/OmSingh2003/git-util/cmd.date={{.Date}}
     binary: git-util # Name of the output binary
 
-# Archive configuration (creates .tar.gz and potentially .zip files)
+# Archive configuration
 archives:
   - # id: default # <-- Removed this line
     # Name template for the archive files
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    # Use the 'formats' list instead of 'format'
-    formats:
-      - tar.gz
-      # - zip
+    # Reverting to 'format' temporarily for debugging
+    format: tar.gz # <-- Reverted from 'formats' list
     # Add README and LICENSE files to the archive
     files:
       - README.md
       - LICENSE
-# Make sure you have this file
 
 # Generate checksums for archives
 checksum:
@@ -97,6 +88,5 @@ brews:
     description: "A command-line utility tool for common Git operations."
     install: |
       bin.install "git-util"
-    # Optional: Add test block for the formula once version command works
     test: |
       system "#{bin}/git-util version"
