@@ -1,5 +1,7 @@
 # git-util
 
+[![Release](https://img.shields.io/github/v/release/OmSingh2003/git-util)](https://github.com/OmSingh2003/git-util/releases/latest)
+[![License](https://img.shields.io/github/license/OmSingh2003/git-util)](LICENSE)
 A command-line utility tool written in Go to simplify common Git operations and assist with DevOps workflows.
 
 This tool is developed by [OmSingh2003](https://github.com/OmSingh2003).
@@ -8,103 +10,100 @@ This tool is developed by [OmSingh2003](https://github.com/OmSingh2003).
 
 The goal of `git-util` is to provide helpful, automated commands for tasks frequently performed with Git, making repository management easier and faster.
 
-## Features
+## Features (v0.1.0)
 
-Currently implemented or planned features:
-
-* **Git Branch Cleaner:**
-    * Identifies local Git branches that have already been merged into a specified main branch (e.g., `main`, `master`).
-    * Provides an option to delete these merged branches safely (`--delete`).
-    * Includes a dry-run mode (`--dry-run`) to preview deletions.
-    * Allows specifying the main branch to compare against (`--main`).
-* *(More features may be added in the future)*
+* **Branch Cleaner (`git-util` root command):** Finds and optionally deletes locally merged branches (`-d` to delete, `-n` for dry-run, `-m` to specify main branch).
+* **Multi-Repo Status (`status` subcommand):** Checks status (dirty, ahead/behind) of multiple repos in a directory (`-D` to specify directory).
+* **Multi-Repo Sync (`sync` subcommand):** Fetches (`-a fetch`) or pulls (`-a pull`) updates across multiple repos (`-D` to specify directory).
 
 ## Installation
 
-You can install `git-util` using `go install`:
+### Homebrew (Recommended for macOS/Linux)
+
+1.  Tap the repository:
+    ```bash
+    brew tap OmSingh2003/git-util
+    ```
+2.  Install `git-util`:
+    ```bash
+    brew install git-util
+    ```
+    To upgrade later: `brew upgrade git-util`
+
+### go install
 
 ```bash
 go install [github.com/OmSingh2003/git-util@latest](https://github.com/OmSingh2003/git-util@latest)
 ```
+Ensure `$HOME/go/bin` is in your `PATH`.
 
-Make sure your `$GOPATH/bin` or `$HOME/go/bin` directory is in your system's `PATH` environment variable.
+### Manual Download
 
-## Building from Source
-
-Alternatively, you can build it from the source code:
-
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/OmSingh2003/git-util.git](https://github.com/OmSingh2003/git-util.git)
-    cd git-util
-    ```
-2.  **Build the binary:** 
-    ```bash
-    go build
-    ```
-    This will create the `git-util` executable in the current directory.
+Download the pre-compiled binary for your operating system from the [GitHub Releases page](https://github.com/OmSingh2003/git-util/releases/latest), extract the archive, and place the `git-util` binary in your desired location (preferably a directory in your `PATH`).
 
 ## Usage
 
-### Branch Cleaner
+### Branch Cleaner (Root Command)
 
-This is the initial command implemented directly on the root `git-util` command.
+* List potentially deletable merged branches (merged into detected `main`/`master`):
+    ```bash
+    git-util
+    # Or specify main branch:
+    git-util -m develop
+    ```
+* Dry run deletion:
+    ```bash
+    git-util -d -n
+    # Or git-util --delete --dry-run
+    ```
+* Actually delete merged branches:
+    ```bash
+    git-util -d
+    # Or git-util --delete
+    ```
 
-**1. List Merged Branches:**
+### Multi-Repo Status (`status` subcommand)
 
-To see which local branches have already been merged into your main branch (defaults to checking against `main` or `master`), simply run:
+* Check status of repos in the current directory:
+    ```bash
+    git-util status
+    ```
+* Check status of repos in a specific directory:
+    ```bash
+    git-util status -D /path/to/your/projects
+    # Or git-util status --directory /path/to/your/projects
+    ```
 
-```bash
-git-util
-```
+### Multi-Repo Sync (`sync` subcommand)
 
-**2. Specify Main Branch:**
-
-If your main development branch is not `main` or `master`, use the `--main` flag:
-
-```bash
-git-util --main develop
-```
-
-**3. Delete Merged Branches:**
-
-*First, run without `--delete` to see which branches will be targeted.*
-
-To delete the identified merged branches, use the `--delete` flag. **Use with caution!**
-
-```bash
-# This will attempt to delete the merged branches
-git-util --delete
-
-# Delete branches merged into 'develop'
-git-util --main develop --delete
-```
-
-**4. Dry Run Deletion:**
-
-To see which branches *would* be deleted without actually performing the deletion, use `--delete` along with `--dry-run`:
-
-```bash
-git-util --delete --dry-run
-
-# Dry run targeting 'develop'
-git-util --main develop --delete --dry-run
-```
+* Fetch updates (`Workspace --prune`) for repos in the current directory (default action):
+    ```bash
+    git-util sync
+    # Or explicitly:
+    git-util sync -a fetch
+    ```
+* Pull updates (`pull --ff-only`) for repos in the current directory:
+    ```bash
+    git-util sync -a pull
+    ```
+* Specify directory and action:
+    ```bash
+    git-util sync -D /path/to/projects -a fetch
+    ```
 
 ## Development
 
-Feel free to contribute or report issues on the [GitHub repository](https://github.com/OmSingh2003/git-util).
-
-Build the project using:
+Clone the repository and build using standard Go commands:
 
 ```bash
+git clone [https://github.com/OmSingh2003/git-util.git](https://github.com/OmSingh2003/git-util.git)
+cd git-util
 go build
 ```
 
+Contributions are welcome! Please open an issue or pull request.
+
 ## License
 
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+*(Make sure you have a file named `LICENSE` in your repository containing the MIT License text or another license of your choice).*
