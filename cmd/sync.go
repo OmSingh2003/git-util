@@ -9,6 +9,7 @@ import (
 
 	// We don't need 'strconv' in sync.go
 
+	"github.com/OmSingh2003/git-util/pkg/gitops"
 	"github.com/spf13/cobra"
 	// NOTE: This code now relies on findGitRepos and runGitCommand
 	// being defined elsewhere in the 'cmd' package (e.g., in root.go)
@@ -54,7 +55,7 @@ or 'git pull --ff-only' to synchronize them with their remotes.`,
 		// --- Find Repositories ---
 		// *** This call was missing in the code you pasted ***
 		// Call the helper function (defined elsewhere in cmd package, e.g., root.go)
-		repos, err := findGitRepos(targetDir)
+		repos, err := gitops.FindGitRepos(targetDir)
 		if err != nil {
 			return fmt.Errorf("error finding repositories: %w", err)
 		}
@@ -101,7 +102,7 @@ or 'git pull --ff-only' to synchronize them with their remotes.`,
 
 			// *** This call was missing in the code you pasted ***
 			// Execute the command using the helper (defined elsewhere in cmd package, e.g., root.go)
-			output, err := runGitCommand(gitFullArgs...) // output is now assigned
+			output, err := gitops.RunGitCommand(gitFullArgs...) // output is now assigned
 
 			// Check for errors after executing the command
 			if err != nil {

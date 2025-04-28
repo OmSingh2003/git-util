@@ -49,7 +49,7 @@ compared to the upstream branch.`,
 
 		// --- Find Git Repositories ---
 		// Call the helper function (defined elsewhere in cmd package, e.g., root.go)
-		repos, err := findGitRepos(targetDir)
+		repos, err := gitops.FindGitRepos(targetDir)
 		if err != nil {
 			return fmt.Errorf("error finding repositories: %w", err)
 		}
@@ -94,7 +94,7 @@ compared to the upstream branch.`,
 			// Run 'git status --porcelain=v1' which gives script-friendly output.
 			// Use '-C <path>' to run the command within the specific repository's directory.
 			// Call the helper function (defined elsewhere in cmd package, e.g., root.go)
-			statusOutput, err := runGitCommand("-C", repoPath, "status", "--porcelain=v1")
+			statusOutput, err := gitops.RunGitCommand("-C", repoPath, "status", "--porcelain=v1")
 			// If the git status command itself failed, log a warning and assume the repo is dirty.
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: failed to get status for %s: %v\n", relPath, err)
