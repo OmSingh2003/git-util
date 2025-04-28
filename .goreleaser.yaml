@@ -1,0 +1,125 @@
+# .goreleaser.yaml
+
+# Version of the GoReleaser configuration syntax
+version: 2
+
+# Used for things like the archive name, defaults to the repository name (git-util)
+project_name: git-util
+
+# Build configuration
+builds:
+  - # Unique ID for the build
+    id: git-util
+    # Entry point for the application
+    main: ./main.go
+    # Target platforms to build for (examples)
+    goos:
+      - linux
+      - darwin # macOS
+      - windows
+    goarch:
+      - amd64 # Intel/AMD 64-bit
+      # - arm64 # Apple Silicon / ARM 64-bit
+    # Environment variables for the build (optional)
+    # env:
+    #   - CGO_ENABLED=0 # Disable CGO for static binaries (usually good for CLIs)
+    # ldflags can inject version information at build time (optional but recommended)
+    # ldflags:
+    #   - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    binary: git-util # Name of the output binary
+
+# Archive configuration (creates .tar.gz and .zip files)
+archives:
+  - # Unique ID for the archive config
+    id: default
+    # Use the build config defined above
+    builds:
+      - git-util
+    # Name template for the archive files
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Format can be tar.gz, zip, etc.
+    format: tar.gz
+    # Add README and LICENSE files to the archive
+    files:
+      - README.md
+      - LICENSE # Add a LICENSE file to your repo if you haven't!
+
+# Generate checksums for archives
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+# Generate a changelog based on Git commit messages
+changelog:
+  sort: asc # Sort commits oldest to newest
+  filters:
+    # Exclude merge commits, chore, docs, test types from conventional commits
+    exclude:
+      - "^Merge branch"
+      - "^Merge pull request"
+      - "(?i)^chore:"
+      - "(?i)^docs:"
+      - "(?i)^test:"
+      - "(?i)^build:"
+
+# Snapshot releases (for testing without a Git tag)
+snapshot:
+  name_template: "{{ incpatch .Version }}-next" # e.g., v0.1.0-next
+
+# GitHub Releases configuration
+release:
+  # Draft release by default, set to false to publish automatically
+  draft: false
+  # Prerelease based on tag name (e.g., v0.1.0-beta)
+  prerelease: auto
+  # Fetch information from GitHub repo
+  github:
+    # Assumes your origin remote points to github.com/OmSingh2003/git-util
+    owner: OmSingh2003
+    name: git-util
+  # Title for the release
+  name_template: "{{.ProjectName}} {{.Version}}"
+  # Optional: Header/footer for release notes
+  # header: |
+  #   Release notes for {{.Tag}}
+  # footer: |
+  #   Built with GoReleaser!
+
+
+brews:
+  - # Unique ID for the brew config (optional)
+    name: git-util # The name of the formula itself
+
+    # Repository details for your Homebrew Tap
+    repository: # <--- Correct field name
+      owner: OmSingh2003
+      name: homebrew-git-util # Make sure this repo exists on GitHub
+      # Optional: Branch to push formula to (defaults to main/master)
+      # branch: main
+      # Optional: Use a token for pushing to the tap repo (recommended for CI)
+      # token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}" # Requires setting this env var
+
+    # Commit author for the formula update
+    commit_author:
+      name: goreleaserbot
+      email: bot@goreleaser.com
+    # Commit message for the formula update
+    commit_msg_template: "Brew formula update for {{ .ProjectName }} version {{ .Tag }}"
+
+    # Link to your project's homepage and the release description
+    homepage: "https://github.com/OmSingh2003/git-util"
+    description: "A command-line utility tool for common Git operations."
+
+    # GoReleaser automatically adds the correct URL and SHA for the release archive
+    # Optional: Specify dependencies if needed (Go is usually implicit)
+    # depends_on:
+    #   - name: go
+    #     type: build # only needed at build time
+
+    # Optional: Add install instructions to the release notes
+    install: |
+      bin.install "git-util"
+
+    # Optional: Add test block for the formula
+    # test: |
+    #   system "#{bin}/git-util --version"

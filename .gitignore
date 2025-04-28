@@ -1,0 +1,8 @@
+# .gitignore file contents
+
+# Environment variables file - DO NOT COMMIT!
+.env
+
+# Binaries
+git-util
+/dist/
