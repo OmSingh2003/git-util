@@ -38,7 +38,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v5 # Use the official GoReleaser action
         with:
           # Specify the GoReleaser version to use
-          version: latest # <-- Make sure this line is uncommented
+          version: v2.0.1 # <-- Make sure this line is uncommented
           # Arguments to pass to GoReleaser
           args: release --clean
         env:
