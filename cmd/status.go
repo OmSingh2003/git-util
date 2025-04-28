@@ -1,12 +1,18 @@
 package cmd
 
 import (
+	// Imports needed by the RunE logic:
 	"fmt"
-	"os"            // Needed for os.Getwd
-	"path/filepath" // To walk directories
+	"os" // For os.Getwd, os.Stderr, etc.
+	"path/filepath"
+	"strconv" // To convert string counts to int
+	"strings"
 
-	// For string checking
+	// Cobra import
 	"github.com/spf13/cobra"
+	// NOTE: We are assuming findGitRepos and runGitCommand are defined
+	// elsewhere in the 'cmd' package (e.g., in root.go) and are therefore accessible here.
+	// No 'bytes' or 'os/exec' import needed here if runGitCommand is defined elsewhere.
 )
 
 // Variable to store the directory flag value
@@ -20,96 +26,165 @@ var statusCmd = &cobra.Command{
 including uncommitted changes, untracked files, and ahead/behind status
 compared to the upstream branch.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Get the target directory
+		// --- Determine Target Directory ---
+		// Use the directory provided by the flag.
 		targetDir := statusDirectory
+		// If the flag was not provided, default to the current working directory.
 		if targetDir == "" {
-			// Default to current directory if flag not set
 			var err error
 			targetDir, err = os.Getwd()
+			// Handle error getting the current directory.
 			if err != nil {
 				return fmt.Errorf("failed to get current directory: %w", err)
 			}
 		}
-		fmt.Printf("Scanning directory: %s\n\n", targetDir)
+		// Convert the target directory path to an absolute path for consistency.
+		var err error
+		targetDir, err = filepath.Abs(targetDir)
+		if err != nil {
+			return fmt.Errorf("failed to get absolute path for target directory: %w", err)
+		}
 
-		// --- TODO: Implement core logic ---
-		// 1. Find all directories containing a '.git' folder within targetDir.
-		// 2. For each found repository path:
-		//    a. Run 'git -C <path> status --porcelain=v1'
-		//    b. Run 'git -C <path> rev-list --left-right --count HEAD...@{u}' (handle upstream error)
-		//    c. Parse outputs to determine status (Clean/Dirty, Ahead/Behind/Diverged)
-		//    d. Print the status for the repo.
+		fmt.Printf("Scanning directory: %s\n", targetDir)
 
-		fmt.Println("\n(Core status logic not yet implemented)") // Placeholder
-
-		// Example of finding repositories (we will refine this)
+		// --- Find Git Repositories ---
+		// Call the helper function (defined elsewhere in cmd package, e.g., root.go)
 		repos, err := findGitRepos(targetDir)
 		if err != nil {
 			return fmt.Errorf("error finding repositories: %w", err)
 		}
 
+		// If no repositories were found, inform the user and exit.
 		if len(repos) == 0 {
 			fmt.Println("No Git repositories found in the specified directory.")
 			return nil
 		}
 
-		fmt.Printf("Found %d Git repositories:\n", len(repos))
-		for _, repo := range repos {
-			// Just print the path for now
-			relPath, _ := filepath.Rel(targetDir, repo) // Show relative path
+		fmt.Printf("\n--- Repository Status ---\n")
+
+		// --- Calculate Max Path Length for Formatting ---
+		// Find the longest relative repository path for nice column alignment.
+		maxLen := 0
+		for _, repoPath := range repos {
+			// Calculate path relative to the target directory.
+			relPath, _ := filepath.Rel(targetDir, repoPath)
+			// If the repo is the target directory itself, use its base name.
 			if relPath == "." {
-				relPath = filepath.Base(targetDir) // Use directory name if it's the target dir itself
+				relPath = filepath.Base(targetDir)
 			}
-			fmt.Printf(" - %s\n", relPath)
-			// TODO: Add status check logic here inside the loop
+			// Update maxLen if the current path is longer.
+			if len(relPath) > maxLen {
+				maxLen = len(relPath)
+			}
 		}
 
-		return nil
+		// --- Process Each Repository ---
+		// Loop through the list of found repository paths.
+		for _, repoPath := range repos {
+			// --- Get Relative Path for Display ---
+			// Calculate the relative path again for display purposes.
+			relPath, _ := filepath.Rel(targetDir, repoPath)
+			if relPath == "." {
+				relPath = filepath.Base(targetDir)
+			}
+
+			// --- Check Working Directory Status ---
+			// isDirty tracks if the working directory has changes or untracked files.
+			isDirty := false
+			// Run 'git status --porcelain=v1' which gives script-friendly output.
+			// Use '-C <path>' to run the command within the specific repository's directory.
+			// Call the helper function (defined elsewhere in cmd package, e.g., root.go)
+			statusOutput, err := runGitCommand("-C", repoPath, "status", "--porcelain=v1")
+			// If the git status command itself failed, log a warning and assume the repo is dirty.
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to get status for %s: %v\n", relPath, err)
+				isDirty = true // Treat as dirty if status command fails
+			} else if statusOutput != "" {
+				// If the command succeeded AND produced any output, it means there are changes.
+				isDirty = true
+			}
+
+			// --- Check Ahead/Behind Status ---
+			// Initialize ahead/behind counts and the status string.
+			ahead := 0
+			behind := 0
+			upstreamStatus := "" // Stores strings like "[Ahead 2]", "[No Upstream]", etc.
+			// Run 'git rev-list' to count commits between local HEAD and its upstream (@{u}).
+			// The output format is "ahead_count<tab>behind_count".
+			// Call the helper function (defined elsewhere in cmd package, e.g., root.go)
+			revOutput, err := runGitCommand("-C", repoPath, "rev-list", "--left-right", "--count", "HEAD...@{u}")
+
+			// Handle errors from the rev-list command.
+			if err != nil {
+				// Check specifically for the error indicating no upstream branch is configured.
+				if strings.Contains(err.Error(), "no upstream configured") || strings.Contains(err.Error(), "unknown revision") {
+					upstreamStatus = " [No Upstream]"
+				} else {
+					// Log other errors encountered while checking ahead/behind status.
+					fmt.Fprintf(os.Stderr, "Warning: failed to get ahead/behind count for %s: %v\n", relPath, err)
+					upstreamStatus = " [Error]"
+				}
+			} else {
+				// If the command succeeded, parse the "ahead\tbehind" output.
+				parts := strings.Split(strings.TrimSpace(revOutput), "\t")
+				// Ensure we got exactly two parts (ahead and behind counts).
+				if len(parts) == 2 {
+					// Convert the string counts to integers. Ignore potential errors for simplicity.
+					ahead, _ = strconv.Atoi(parts[0])
+					behind, _ = strconv.Atoi(parts[1])
+
+					// Format the upstreamStatus string based on the counts.
+					if ahead > 0 && behind > 0 {
+						upstreamStatus = fmt.Sprintf(" [Ahead %d, Behind %d]", ahead, behind) // Diverged
+					} else if ahead > 0 {
+						upstreamStatus = fmt.Sprintf(" [Ahead %d]", ahead)
+					} else if behind > 0 {
+						upstreamStatus = fmt.Sprintf(" [Behind %d]", behind)
+					}
+					// If ahead=0 and behind=0, upstreamStatus remains empty ("Synced").
+				} else {
+					// Handle unexpected output format from rev-list.
+					upstreamStatus = " [Error Parsing Revs]"
+				}
+			}
+
+			// --- Combine and Print Status ---
+			// Determine the final status string to display.
+			finalStatus := ""
+			if isDirty {
+				// If dirty, show "Dirty" plus any upstream info.
+				finalStatus = "Dirty" + upstreamStatus
+			} else if upstreamStatus != "" && !strings.HasPrefix(upstreamStatus, " [Error") && upstreamStatus != " [No Upstream]" {
+				// If clean AND there's a valid ahead/behind status, show "Clean" plus that status.
+				finalStatus = "Clean" + upstreamStatus
+			} else if upstreamStatus != "" {
+				// If clean but there was an error/no upstream, show "Clean" plus that specific status.
+				finalStatus = "Clean" + upstreamStatus
+			} else {
+				// If clean and synced (upstreamStatus is empty), just show "Clean".
+				finalStatus = "Clean"
+			}
+
+			// Print the formatted status line, aligning the path using maxLen.
+			fmt.Printf("%-*s : %s\n", maxLen, relPath, finalStatus)
+
+		} // End loop through repos
+
+		return nil // Indicate successful execution of the command
 	},
 }
 
+// --- init() function ---
+// This function runs when the package is initialized.
 func init() {
-	rootCmd.AddCommand(statusCmd) // Add statusCmd to the root command
-
-	// Define flags for the status command
-	// Use P for short flag 'd'
+	// Register the statusCmd as a subcommand of the rootCmd (git-util).
+	rootCmd.AddCommand(statusCmd)
+	// Define the '--directory' flag for the status command.
+	// -P adds the short flag '-D'.
+	// The flag value will be stored in the 'statusDirectory' variable.
 	statusCmd.Flags().StringVarP(&statusDirectory, "directory", "D", "", "Directory to scan for Git repositories (defaults to current directory)")
-	// Note: Using -D to avoid conflict with root command's -d for delete. Choose another if you prefer.
 }
 
-// --- Helper Function (Example - can be moved/improved later) ---
-
-// findGitRepos walks the directory tree and finds paths containing a .git subdirectory.
-func findGitRepos(rootDir string) ([]string, error) {
-	var repos []string
-	err := filepath.WalkDir(rootDir, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
-			// Skip directories we can't read, but report other errors
-			fmt.Fprintf(os.Stderr, "Warning: Error accessing path %q: %v\n", path, err)
-			return filepath.SkipDir // Stop walking this directory branch
-		}
-
-		// Check if the entry is a directory named .git
-		if d.IsDir() && d.Name() == ".git" {
-			// The parent directory is the Git repository root
-			repoPath := filepath.Dir(path)
-			repos = append(repos, repoPath)
-			// Skip walking further down into the .git directory itself
-			return filepath.SkipDir
-		}
-
-		// Skip vendor/node_modules directories to speed things up (optional)
-		if d.IsDir() && (d.Name() == "vendor" || d.Name() == "node_modules") {
-			return filepath.SkipDir
-		}
-
-		// If we are checking the root directory itself, don't skip it if it doesn't contain .git immediately
-		// Allow WalkDir to continue into subdirectories unless skipped above.
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return repos, nil
-}
+// --- Helper Functions ---
+// *** DO NOT DEFINE findGitRepos or runGitCommand here! ***
+// They should be defined only ONCE in the cmd package (e.g., in cmd/root.go)
