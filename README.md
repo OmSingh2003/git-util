@@ -38,7 +38,7 @@ Alternatively, you can build it from the source code:
     git clone [https://github.com/OmSingh2003/git-util.git](https://github.com/OmSingh2003/git-util.git)
     cd git-util
     ```
-2.  **Build the binary:**
+2.  **Build the binary:** 
     ```bash
     go build
     ```
