@@ -19,6 +19,7 @@ var (
 )
 
 // rootCmd represents the base command when called without any subcommands
+
 var rootCmd = &cobra.Command{
 	Use:   "git-util",
 	Short: "A utility tool for common Git operations.",
@@ -26,23 +27,23 @@ var rootCmd = &cobra.Command{
 The first feature implemented is cleaning up merged local branches.
 More features might be added later.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Executing Git Branch Cleaner...")
+		// fmt.Println("Executing Git Branch Cleaner...") // Can optionally remove some verbose logging now
 
 		// --- Step 1: Determine the target main branch ---
-		targetMainBranch := mainBranchName // Use flag value if provided
+		targetMainBranch := mainBranchName
 		if targetMainBranch == "" {
 			var err error
 			targetMainBranch, err = detectDefaultMainBranch()
 			if err != nil {
 				return fmt.Errorf("could not detect default main branch: %w", err)
 			}
-			fmt.Printf("Auto-detected main branch: %s\n", targetMainBranch)
+			// fmt.Printf("Auto-detected main branch: %s\n", targetMainBranch)
 		} else {
-			fmt.Printf("Using specified main branch: %s\n", targetMainBranch)
+			// fmt.Printf("Using specified main branch: %s\n", targetMainBranch)
 		}
 
 		// --- Step 2: Run `git branch --merged <target>` ---
-		fmt.Printf("Finding local branches merged into %s...\n", targetMainBranch)
+		// fmt.Printf("Finding local branches merged into %s...\n", targetMainBranch)
 		mergedBranchesOutput, err := runGitCommand("branch", "--merged", targetMainBranch)
 		if err != nil {
 			if strings.Contains(err.Error(), "warn: no such ref") || strings.Contains(err.Error(), "error: malformed object name") {
@@ -55,41 +56,74 @@ More features might be added later.`,
 		lines := strings.Split(mergedBranchesOutput, "\n")
 
 		// --- Step 4: Filter the branches ---
-		var branchesToProcess []string // Slice to hold branches we might delete/list
-		// currentBranch := "" // We don't strictly need to store the current branch name globally
-
-		fmt.Println("\nProcessing branches:")
+		var branchesToProcess []string
 		for _, line := range lines {
-			// Trim leading/trailing whitespace
 			branchName := strings.TrimSpace(line)
-
-			// Skip empty lines that might result from splitting
 			if branchName == "" {
 				continue
 			}
-
-			// Check for current branch indication '*' and skip it
+			// Skip current branch
 			if strings.HasPrefix(branchName, "* ") {
-				// currentBranch = strings.TrimPrefix(branchName, "* ") // Extract if needed later
-				fmt.Printf(" - Found current branch: %s (skipping)\n", strings.TrimPrefix(branchName, "* "))
-				continue // Skip the current branch - safer not to delete it automatically
-			}
-
-			// Skip the main branch itself
-			if branchName == targetMainBranch {
-				fmt.Printf(" - Found target main branch: %s (skipping)\n", branchName)
 				continue
 			}
-
-			// If it passes all checks, add it to the list of branches to potentially delete/list
-			fmt.Printf(" + Found merged branch: %s (candidate for action)\n", branchName)
+			// Skip the main branch itself
+			if branchName == targetMainBranch {
+				continue
+			}
 			branchesToProcess = append(branchesToProcess, branchName)
 		}
 
-		// --- Step 5: Perform action (Next Step) ---
-		fmt.Printf("\nBranches identified for processing (excluding current and main): %v\n", branchesToProcess)
+		// --- Step 5: Perform action ---
+		if len(branchesToProcess) == 0 {
+			fmt.Printf("No local branches found that are merged into %s (excluding the current branch).\n", targetMainBranch)
+			return nil // Nothing to do
+		}
 
-		fmt.Println("\n(Action logic not yet implemented)")
+		if !deleteBranches {
+			// Default action: List branches
+			fmt.Printf("The following local branches are merged into %s and can potentially be deleted:\n", targetMainBranch)
+			for _, branch := range branchesToProcess {
+				fmt.Printf("  - %s\n", branch)
+			}
+			fmt.Println("\nRun with --delete flag to remove them.")
+		} else {
+			// Deletion action enabled
+			fmt.Printf("Processing deletion for branches merged into %s...\n", targetMainBranch)
+			successCount := 0
+			failCount := 0
+
+			for _, branch := range branchesToProcess {
+				if dryRun {
+					fmt.Printf("[Dry Run] Would attempt to delete branch: %s\n", branch)
+					// Optionally print the command: fmt.Printf("[Dry Run] Would run: git branch -d %s\n", branch)
+					successCount++ // Assume success for dry run counting
+				} else {
+					// Actual deletion
+					fmt.Printf("Attempting to delete branch: %s...", branch)
+					_, err := runGitCommand("branch", "-d", branch) // Use -d for safety first
+					if err != nil {
+						fmt.Printf(" Failed (%v)\n", err)
+						failCount++
+						// Note: You might need 'git branch -D' for unmerged branches, but '-d' is safer here.
+						// The error message from runGitCommand will usually indicate if -D is needed.
+					} else {
+						fmt.Println(" Deleted.")
+						successCount++
+					}
+				}
+			}
+
+			fmt.Printf("\nSummary:\n")
+			if dryRun {
+				fmt.Printf("  Dry run complete. %d branches would have been targeted for deletion.\n", successCount)
+			} else {
+				fmt.Printf("  Successfully deleted: %d\n", successCount)
+				fmt.Printf("  Failed to delete:   %d\n", failCount)
+				if failCount > 0 {
+					fmt.Println("  (Failures might occur if a branch has unmerged changes specific to it; use 'git branch -D' manually if needed.)")
+				}
+			}
+		}
 
 		return nil // Return nil for success
 	},
