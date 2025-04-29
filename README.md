@@ -1,7 +1,6 @@
 # git-util
 
 [![Release](https://img.shields.io/github/v/release/OmSingh2003/git-util)](https://github.com/OmSingh2003/git-util/releases/latest)
-[![License](https://img.shields.io/github/license/OmSingh2003/git-util)](LICENSE)
 A command-line utility tool written in Go to simplify common Git operations and assist with DevOps workflows.
 
 This tool is developed by [OmSingh2003](https://github.com/OmSingh2003).
