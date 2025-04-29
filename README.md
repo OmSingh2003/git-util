@@ -6,7 +6,7 @@ A command-line utility tool written in Go to simplify common Git operations and 
 This tool is developed by [OmSingh2003](https://github.com/OmSingh2003).
 
 ## Purpose
-
+efeda
 The goal of `git-util` is to provide helpful, automated commands for tasks frequently performed with Git, making repository management easier and faster.
 
 ## Features (v0.1.0)
@@ -105,4 +105,3 @@ Contributions are welcome! Please open an issue or pull request.
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-*(Make sure you have a file named `LICENSE` in your repository containing the MIT License text or another license of your choice).*
