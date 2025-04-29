@@ -1,4 +1,4 @@
-# .goreleaser.yaml (Reverting to 'format' for debugging)
+# .goreleaser.yaml (Corrected Homebrew Token Env Var Name)
 
 # Version of the GoReleaser configuration syntax
 version: 2
@@ -32,11 +32,10 @@ builds:
 
 # Archive configuration
 archives:
-  - # id: default # <-- Removed this line
-    # Name template for the archive files
+  - # Name template for the archive files
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    # Reverting to 'format' temporarily for debugging
-    format: tar.gz # <-- Reverted from 'formats' list
+    # Using 'format' as a temporary debug step (can revert to 'formats' later)
+    format: tar.gz
     # Add README and LICENSE files to the archive
     files:
       - README.md
@@ -79,7 +78,8 @@ brews:
     repository:
       owner: OmSingh2003
       name: homebrew-git-util
-      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+      # Ensure this matches the env var set in the workflow YAML
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}" # <-- Corrected Env Var Name
     commit_author:
       name: goreleaserbot
       email: bot@goreleaser.com
@@ -90,3 +90,4 @@ brews:
       bin.install "git-util"
     test: |
       system "#{bin}/git-util version"
+
