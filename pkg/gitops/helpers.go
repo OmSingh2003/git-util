@@ -45,10 +45,10 @@ func DetectDefaultMainBranch() (string, error) { // return type of string and er
 
 // FindGitRepos walks the directory tree starting from rootDir and finds paths
 // containing a .git subdirectory, indicating a Git repository root.
-func FindGitRepos(rootDir string) ([]string, error) { // Renamed to Uppercase
-	var repos []string
-	err := filepath.WalkDir(rootDir, func(path string, d os.DirEntry, err error) error {
-		if err != nil {
+func FindGitRepos(rootDir string) ([]string, error) { //takes input rootDir and returns path to .git
+	var repos []string // take as empty string slice
+	err := filepath.WalkDir(rootDir, func(path string, d os.DirEntry, err error) error { // using filepath.WalkDir, walks and visits every file/directory
+		if err != nil { // no error
 			fmt.Fprintf(os.Stderr, "Warning: Error accessing path %q: %v\n", path, err)
 			return filepath.SkipDir
 		}
