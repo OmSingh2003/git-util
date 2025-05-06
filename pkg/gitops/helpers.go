@@ -1,8 +1,7 @@
 // pkg/gitops/helpers.go
-package gitops // Declare package name
+package gitops 
 
 import (
-	// Imports needed by the helper functions
 	"bytes"
 	"errors"
 	"fmt"
@@ -13,12 +12,11 @@ import (
 )
 
 // --- Helper Functions ---
-// These functions are defined with Uppercase names to be exported (public)
 // and usable by other packages (like 'cmd').
 
 // RunGitCommand executes a git command and returns its trimmed stdout output or an error
 // including stderr content for better diagnostics.
-func RunGitCommand(args ...string) (string, error) { // Renamed to Uppercase
+func RunGitCommand(args ...string) (string, error) { // function to run git commands take array of strings as input and return the output or error
 	cmd := exec.Command("git", args...)
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
