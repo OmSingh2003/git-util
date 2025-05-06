@@ -3,14 +3,12 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings" // Still needed for string manipulation in RunE
+	"strings"
 
-	"github.com/OmSingh2003/git-util/pkg/gitops" // Importing the gitops package
+	"github.com/OmSingh2003/git-util/pkg/gitops" 
 	"github.com/spf13/cobra"
-	// Removed bytes, errors, os/exec, path/filepath as they are likely only used by helpers in gitops package now
 )
 
-// Variables to hold the flag values for the root command (branch cleaner)
 var (
 	mainBranchName string
 	deleteBranches bool
