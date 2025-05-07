@@ -18,7 +18,7 @@ var (
 // rootCmd represents the base command when called without any subcommands
 // Its primary function currently is the 'branch cleaner' logic.
 var rootCmd = &cobra.Command{
-	Use:   "git-util",
+	Use:   "git-util", // root cmd
 	Short: "A utility tool for common Git operations.",
 	Long: `git-util helps automate and simplify various Git tasks.
 The first feature implemented is cleaning up merged local branches.
