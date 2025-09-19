@@ -6,7 +6,6 @@ A command-line utility tool written in Go to simplify common Git operations and 
 This tool is developed by [OmSingh2003](https://github.com/OmSingh2003).
 
 ## Purpose
-efeda
 The goal of `git-util` is to provide helpful, automated commands for tasks frequently performed with Git, making repository management easier and faster.
 
 ## Features (v0.1.0)
